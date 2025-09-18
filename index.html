@@ -57,33 +57,15 @@
         let app, db, auth, userId = null;
         let isAuthReady = false;
 
-        const mockDeals = [
-            {
-                id: 'deal_1',
-                title: 'Crazy Price Drop!',
-                message: 'A limited-time offer on the new Galaxy phone. Don\'t miss out!',
-                productName: 'Samsung Galaxy A17 5G',
-                dealPercentage: 42,
-                timestamp: Date.now() - 3600000 // 1 hour ago
-            },
-            {
-                id: 'deal_2',
-                title: 'Flash Sale Alert!',
-                message: 'Motorola G45 5G is now at a new low price with an extra bank discount.',
-                productName: 'Motorola G45 5G',
-                dealPercentage: 20,
-                timestamp: Date.now() - 1200000 // 20 mins ago
-            },
-        ];
-
-        // Products with mock data
+        // Mock product data to display
+        // In a real app, this data would come from a database or an external API
         const products = [
-            { id: 'p1', name: 'Samsung Galaxy A17 5G', originalPrice: 13999, dealPrice: 8119, specs: { processor: 'Exynos', camera: 'High', battery: 'High' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=Samsung', buyLink: 'https://www.flipkart.com/samsung' },
-            { id: 'p2', name: 'Realme P4 5G', originalPrice: 14799, dealPrice: 11874, specs: { processor: 'Dimensity', camera: 'Medium', battery: 'Medium' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=Realme', buyLink: 'https://www.flipkart.com/realme' },
-            { id: 'p3', name: 'POCO M7 Plus', originalPrice: 13774, dealPrice: 13774, specs: { processor: 'Snapdragon', camera: 'Medium', battery: 'High' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=POCO', buyLink: 'https://www.flipkart.com/poco' },
-            { id: 'p4', name: 'CMF Phone 2 Pro', originalPrice: 17099, dealPrice: 17099, specs: { processor: 'Dimensity', camera: 'High', battery: 'Medium' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=CMF', buyLink: 'https://www.flipkart.com/cmf' },
-            { id: 'p5', name: 'Vivo T4x', originalPrice: 13774, dealPrice: 13774, specs: { processor: 'Dimensity', camera: 'High', battery: 'High' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=Vivo', buyLink: 'https://www.flipkart.com/vivo' },
-            { id: 'p6', name: 'Motorola G45 5G', originalPrice: 12499, dealPrice: 9999, specs: { processor: 'Snapdragon', camera: 'Medium', battery: 'Medium' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=Motorola', buyLink: 'https://www.flipkart.com/motorola' },
+            { id: 'p1', name: 'Samsung Galaxy A17 5G', originalPrice: 13999, dealPrice: 8119, specs: { processor: 'Exynos', camera: 'High', battery: 'High' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=📱', buyLink: 'https://www.flipkart.com/samsung' },
+            { id: 'p2', name: 'Realme P4 5G', originalPrice: 14799, dealPrice: 11874, specs: { processor: 'Dimensity', camera: 'Medium', battery: 'Medium' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=📱', buyLink: 'https://www.flipkart.com/realme' },
+            { id: 'p3', name: 'POCO M7 Plus', originalPrice: 13774, dealPrice: 13774, specs: { processor: 'Snapdragon', camera: 'Medium', battery: 'High' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=📱', buyLink: 'https://www.flipkart.com/poco' },
+            { id: 'p4', name: 'CMF Phone 2 Pro', originalPrice: 17099, dealPrice: 17099, specs: { processor: 'Dimensity', camera: 'High', battery: 'Medium' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=📱', buyLink: 'https://www.flipkart.com/cmf' },
+            { id: 'p5', name: 'Vivo T4x', originalPrice: 13774, dealPrice: 13774, specs: { processor: 'Dimensity', camera: 'High', battery: 'High' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=📱', buyLink: 'https://www.flipkart.com/vivo' },
+            { id: 'p6', name: 'Motorola G45 5G', originalPrice: 12499, dealPrice: 9999, specs: { processor: 'Snapdragon', camera: 'Medium', battery: 'Medium' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=📱', buyLink: 'https://www.flipkart.com/motorola' },
         ];
         
         // This is a simplified function to simulate adding a new deal to Firestore.
