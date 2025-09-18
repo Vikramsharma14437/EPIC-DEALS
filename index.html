@@ -57,24 +57,24 @@
         let app, db, auth, userId = null;
         let isAuthReady = false;
 
-        // Mock product data to display
-        // In a real app, this data would come from a database or an external API
+        // Note: It's not possible to fetch product data and images directly from sites like Flipkart and Amazon due to CORS policy and other technical/legal restrictions.
+        // This app uses hardcoded data for demonstration. In a real-world scenario, this data would come from a trusted backend API.
         const products = [
-            { id: 'p1', name: 'Samsung Galaxy A17 5G', originalPrice: 13999, dealPrice: 8119, specs: { processor: 'Exynos', camera: 'High', battery: 'High' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=📱', buyLink: 'https://www.flipkart.com/samsung' },
-            { id: 'p2', name: 'Realme P4 5G', originalPrice: 14799, dealPrice: 11874, specs: { processor: 'Dimensity', camera: 'Medium', battery: 'Medium' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=📱', buyLink: 'https://www.flipkart.com/realme' },
-            { id: 'p3', name: 'POCO M7 Plus', originalPrice: 13774, dealPrice: 13774, specs: { processor: 'Snapdragon', camera: 'Medium', battery: 'High' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=📱', buyLink: 'https://www.flipkart.com/poco' },
-            { id: 'p4', name: 'CMF Phone 2 Pro', originalPrice: 17099, dealPrice: 17099, specs: { processor: 'Dimensity', camera: 'High', battery: 'Medium' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=📱', buyLink: 'https://www.flipkart.com/cmf' },
-            { id: 'p5', name: 'Vivo T4x', originalPrice: 13774, dealPrice: 13774, specs: { processor: 'Dimensity', camera: 'High', battery: 'High' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=📱', buyLink: 'https://www.flipkart.com/vivo' },
-            { id: 'p6', name: 'Motorola G45 5G', originalPrice: 12499, dealPrice: 9999, specs: { processor: 'Snapdragon', camera: 'Medium', battery: 'Medium' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=📱', buyLink: 'https://www.flipkart.com/motorola' },
+            { id: 'p1', name: 'Samsung Galaxy A17 5G', originalPrice: 13999, dealPrice: 8119, specs: { processor: 'Exynos', camera: 'High', battery: 'High' }, imageUrl: 'https://images.unsplash.com/photo-1610945417855-5c1a166e04d4?q=80&w=1500', buyLink: 'https://www.flipkart.com/samsung' },
+            { id: 'p2', name: 'Realme P4 5G', originalPrice: 14799, dealPrice: 11874, specs: { processor: 'Dimensity', camera: 'Medium', battery: 'Medium' }, imageUrl: 'https://images.unsplash.com/photo-1627914714154-206e00b33b09?q=80&w=1500', buyLink: 'https://www.flipkart.com/realme' },
+            { id: 'p3', name: 'POCO M7 Plus', originalPrice: 13774, dealPrice: 13774, specs: { processor: 'Snapdragon', camera: 'Medium', battery: 'High' }, imageUrl: 'https://images.unsplash.com/photo-1596558450123-f365774bb26c?q=80&w=1500', buyLink: 'https://www.flipkart.com/poco' },
+            { id: 'p4', name: 'CMF Phone 2 Pro', originalPrice: 17099, dealPrice: 17099, specs: { processor: 'Dimensity', camera: 'High', battery: 'Medium' }, imageUrl: 'https://images.unsplash.com/photo-1605295966563-7140884d6216?q=80&w=1500', buyLink: 'https://www.flipkart.com/cmf' },
+            { id: 'p5', name: 'Vivo T4x', originalPrice: 13774, dealPrice: 13774, specs: { processor: 'Dimensity', camera: 'High', battery: 'High' }, imageUrl: 'https://images.unsplash.com/photo-1603575440018-b80c1071d200?q=80&w=1500', buyLink: 'https://www.flipkart.com/vivo' },
+            { id: 'p6', name: 'Motorola G45 5G', originalPrice: 12499, dealPrice: 9999, specs: { processor: 'Snapdragon', camera: 'Medium', battery: 'Medium' }, imageUrl: 'https://images.unsplash.com/photo-1605296066708-2e06c3a13917?q=80&w=1500', buyLink: 'https://www.flipkart.com/motorola' },
         ];
         
         // This is a simplified function to simulate adding a new deal to Firestore.
         // It's not part of the main app logic but demonstrates how a backend might update the public collection.
         const simulateNewDeal = async () => {
             const newDeal = {
-                title: 'New Deal Alert!',
-                message: 'A brand new flash deal just went live!',
-                productName: 'Simulated New Phone',
+                title: 'Nayi Deal aayi!',
+                message: 'Ek dum nayi deal abhi abhi live hui hai!',
+                productName: 'Simulated Naya Phone',
                 dealPercentage: Math.floor(Math.random() * 50) + 10,
                 timestamp: Date.now()
             };
@@ -167,10 +167,10 @@
             try {
                 await setDoc(userDocRef, preferences, { merge: true });
                 console.log("Preferences saved successfully!");
-                document.getElementById('save-status').textContent = 'Preferences saved!';
+                document.getElementById('save-status').textContent = 'Preferences save ho gayi!';
             } catch (error) {
                 console.error("Error saving preferences:", error);
-                document.getElementById('save-status').textContent = 'Failed to save preferences.';
+                document.getElementById('save-status').textContent = 'Preferences save nahi ho payi.';
             }
         };
 
@@ -215,7 +215,7 @@
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }],
                 systemInstruction: {
-                    parts: [{ text: "You are a witty, concise, and helpful shopping assistant who loves a good deal." }]
+                    parts: [{ text: "You are a witty, concise, and helpful shopping assistant who loves a good deal. Answer in Hindi." }]
                 }
             };
 
@@ -257,17 +257,54 @@
         };
 
         const getDealSummary = async (product) => {
-            showModal('Getting Deal Summary...', '<div class="loading-animation mx-auto"></div>');
-            const prompt = `Write a one-sentence, witty, and concise summary for a crazy deal on the following product: ${product.name}, originally priced at ₹${product.originalPrice}, now at ₹${product.dealPrice}. Focus on why it's a great value.`;
+            showModal('Deal Summary le rahe hain...', '<div class="loading-animation mx-auto"></div>');
+            const prompt = `Write a one-sentence, witty, and concise summary in Hindi for a crazy deal on the following product: ${product.name}, originally priced at ₹${product.originalPrice}, now at ₹${product.dealPrice}. Focus on why it's a great value.`;
             const summary = await callGeminiApi(prompt);
-            showModal('Deal Summary', `<p>${summary}</p>`);
+            if (summary.includes("Sorry, I couldn't generate")) {
+                showModal('API Error', `<p>${summary}</p><p class="mt-2 text-xs text-red-400">Kripya kuch seconds baad fir se koshish karein.</p>`);
+            } else {
+                showModal('Deal Summary', `<p>${summary}</p>`);
+            }
         };
 
         const explainSpecs = async (product) => {
-            showModal('Explaining Specs...', '<div class="loading-animation mx-auto"></div>');
-            const prompt = `Explain the following specifications for the product "${product.name}" in simple, non-technical terms for a general consumer: Processor: ${product.specs.processor}, Camera Quality: ${product.specs.camera}, Battery Life: ${product.specs.battery}. Focus on what these features mean for a person's daily phone usage.`;
+            showModal('Specifications samjha rahe hain...', '<div class="loading-animation mx-auto"></div>');
+            const prompt = `Explain the following specifications for the product "${product.name}" in simple, non-technical terms in Hindi for a general consumer: Processor: ${product.specs.processor}, Camera Quality: ${product.specs.camera}, Battery Life: ${product.specs.battery}. Focus on what these features mean for a person's daily phone usage.`;
             const explanation = await callGeminiApi(prompt);
-            showModal('Spec Explained', `<p>${explanation}</p>`);
+            if (explanation.includes("Sorry, I couldn't generate")) {
+                showModal('API Error', `<p>${explanation}</p><p class="mt-2 text-xs text-red-400">Kripya kuch seconds baad fir se koshish karein.</p>`);
+            } else {
+                showModal('Spec Explained', `<p>${explanation}</p>`);
+            }
+        };
+        
+        const createProductCard = (product) => {
+            const card = document.createElement('div');
+            card.className = 'bg-slate-800 rounded-xl shadow-lg p-6 flex flex-col items-center text-center product-card';
+            const savedPercentage = ((product.originalPrice - product.dealPrice) / product.originalPrice * 100).toFixed(0);
+            card.innerHTML = `
+                <img src="${product.imageUrl}" alt="${product.name}" onerror="this.src='https://placehold.co/400x400/1e293b/e2e8f0?text=📱';" class="w-40 h-40 object-cover rounded-lg mb-4">
+                <h3 class="text-xl font-bold text-slate-100">${product.name}</h3>
+                <div class="mt-2 text-slate-400">
+                    <p class="text-sm">
+                        <span class="line-through">₹${product.originalPrice}</span>
+                        <span class="font-bold text-red-400 ml-2">₹${product.dealPrice}</span>
+                    </p>
+                    <p class="text-green-400 font-bold mt-1">${savedPercentage}% off!</p>
+                </div>
+                <div class="mt-4 flex-grow flex flex-col items-center space-y-2 w-full">
+                    <a href="${product.buyLink}" target="_blank" class="w-full gradient-bg text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                        Abhi Kharidein
+                    </a>
+                    <button onclick="getDealSummary(${JSON.stringify(product).replace(/"/g, "'")})" class="w-full bg-slate-700 text-purple-300 font-bold py-3 px-6 rounded-full shadow-lg hover:bg-slate-600 transition-all duration-300">
+                        ✨ Deal Summary paayen
+                    </button>
+                    <button onclick="explainSpecs(${JSON.stringify(product).replace(/"/g, "'")})" class="w-full bg-slate-700 text-purple-300 font-bold py-3 px-6 rounded-full shadow-lg hover:bg-slate-600 transition-all duration-300">
+                        ✨ Specifications samjhen
+                    </button>
+                </div>
+            `;
+            return card;
         };
 
         const renderProducts = () => {
@@ -285,35 +322,10 @@
             });
 
             if (filteredProducts.length === 0) {
-                productList.innerHTML = `<p class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 font-semibold">No products found matching your criteria.</p>`;
+                productList.innerHTML = `<p class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 font-semibold">Koi bhi product aapke criteria se match nahi karta hai.</p>`;
             } else {
                 filteredProducts.forEach(product => {
-                    const card = document.createElement('div');
-                    card.className = 'bg-slate-800 rounded-xl shadow-lg p-6 flex flex-col items-center text-center product-card';
-                    const savedPercentage = ((product.originalPrice - product.dealPrice) / product.originalPrice * 100).toFixed(0);
-                    card.innerHTML = `
-                        <img src="${product.imageUrl}" alt="${product.name}" class="w-40 h-40 object-cover rounded-lg mb-4">
-                        <h3 class="text-xl font-bold text-slate-100">${product.name}</h3>
-                        <div class="mt-2 text-slate-400">
-                            <p class="text-sm">
-                                <span class="line-through">₹${product.originalPrice}</span>
-                                <span class="font-bold text-red-400 ml-2">₹${product.dealPrice}</span>
-                            </p>
-                            <p class="text-green-400 font-bold mt-1">${savedPercentage}% off!</p>
-                        </div>
-                        <div class="mt-4 flex-grow flex flex-col items-center space-y-2 w-full">
-                            <a href="${product.buyLink}" target="_blank" class="w-full gradient-bg text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                Buy Now
-                            </a>
-                            <button onclick="getDealSummary(${JSON.stringify(product).replace(/"/g, "'")})" class="w-full bg-slate-700 text-purple-300 font-bold py-3 px-6 rounded-full shadow-lg hover:bg-slate-600 transition-all duration-300">
-                                ✨ Get Deal Summary
-                            </button>
-                            <button onclick="explainSpecs(${JSON.stringify(product).replace(/"/g, "'")})" class="w-full bg-slate-700 text-purple-300 font-bold py-3 px-6 rounded-full shadow-lg hover:bg-slate-600 transition-all duration-300">
-                                ✨ Explain Specs
-                            </button>
-                        </div>
-                    `;
-                    productList.appendChild(card);
+                    productList.appendChild(createProductCard(product));
                 });
             }
         };
@@ -350,7 +362,7 @@
     <main class="w-full max-w-6xl space-y-8">
         <header class="text-center py-8">
             <h1 class="text-5xl font-extrabold text-white tracking-tight">Crazy Deal Finder</h1>
-            <p class="mt-2 text-lg text-slate-400">Find unimaginable prices on smartphones and more.</p>
+            <p class="mt-2 text-lg text-slate-400">Smartphones aur bohot kuch par unimaginable daam khojein.</p>
         </header>
 
         <section class="bg-slate-800 rounded-2xl shadow-xl p-6 md:p-8">
@@ -359,26 +371,26 @@
                 <!-- Notifications will be displayed here -->
             </div>
             <div class="mt-4 text-center">
-                <button id="add-deal-btn" class="text-sm text-blue-400 hover:text-blue-200 transition-colors duration-300">Simulate a new deal drop</button>
+                <button id="add-deal-btn" class="text-sm text-blue-400 hover:text-blue-200 transition-colors duration-300">Ek nayi deal simulate karein</button>
             </div>
         </section>
 
         <section class="bg-slate-800 rounded-2xl shadow-xl p-6 md:p-8">
-            <h2 class="text-2xl font-bold text-white mb-4">Customize Your Search</h2>
+            <h2 class="text-2xl font-bold text-white mb-4">Apni khoj ko customize karein</h2>
             <div id="user-id-display" class="text-slate-400 text-sm mb-4">Authenticating...</div>
             <div class="flex flex-col md:flex-row gap-4 items-center">
                 <div class="w-full">
-                    <label for="min-price" class="block text-sm font-medium text-slate-400">Min Price (₹)</label>
+                    <label for="min-price" class="block text-sm font-medium text-slate-400">Minimum daam (₹)</label>
                     <input type="number" id="min-price" class="mt-1 block w-full rounded-md border-slate-700 bg-slate-900 text-white shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="w-full">
-                    <label for="max-price" class="block text-sm font-medium text-slate-400">Max Price (₹)</label>
+                    <label for="max-price" class="block text-sm font-medium text-slate-400">Maximum daam (₹)</label>
                     <input type="number" id="max-price" class="mt-1 block w-full rounded-md border-slate-700 bg-slate-900 text-white shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="w-full">
                     <label for="spec-filter" class="block text-sm font-medium text-slate-400">Specification</label>
                     <select id="spec-filter" class="mt-1 block w-full rounded-md border-slate-700 bg-slate-900 text-white shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="all">All Specs</option>
+                        <option value="all">Saare Specs</option>
                         <option value="processor">High Performance Processor</option>
                         <option value="camera">High Camera Quality</option>
                         <option value="battery">High Battery Life</option>
@@ -387,20 +399,20 @@
             </div>
             <div class="mt-6 flex flex-wrap gap-4 justify-center">
                 <button id="apply-filters" class="gradient-bg text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                    Apply Filters
+                    Filters Lagao
                 </button>
                 <button id="reset-filters" class="bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-full shadow-lg hover:bg-slate-600 transition-all duration-300">
-                    Reset
+                    Reset Karo
                 </button>
                 <button id="save-preferences" class="bg-green-600 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:bg-green-700 transition-all duration-300">
-                    Save Preferences
+                    Pasand Save Karo
                 </button>
             </div>
             <p id="save-status" class="text-center text-sm mt-4 text-slate-500"></p>
         </section>
 
         <section class="bg-slate-800 rounded-2xl shadow-xl p-6 md:p-8">
-            <h2 class="text-2xl font-bold text-white mb-6">Explore Crazy Deals</h2>
+            <h2 class="text-2xl font-bold text-white mb-6">Crazy Deals khojen</h2>
             <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Product cards will be rendered here -->
             </div>
@@ -413,7 +425,7 @@
             <h3 id="modal-title" class="text-xl font-bold text-white mb-4"></h3>
             <div id="modal-content" class="text-slate-300"></div>
             <div class="mt-6 text-center">
-                <button id="close-modal" class="gradient-bg text-white font-bold py-2 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">Close</button>
+                <button id="close-modal" class="gradient-bg text-white font-bold py-2 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">Band Karein</button>
             </div>
         </div>
     </div>
