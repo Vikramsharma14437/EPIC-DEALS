@@ -114,7 +114,7 @@
                     await signInWithCustomToken(auth, initialAuthToken);
                 } catch (error) {
                     console.error("Error initializing Firebase:", error);
-                    alert("Firebase initialization failed. Check your configuration.");
+                    showModal("Initialization Error", "Firebase initialization failed. Check your configuration.");
                 }
             } else {
                 app = initializeApp({});
