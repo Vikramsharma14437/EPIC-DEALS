@@ -1,0 +1,439 @@
+<!DOCTYPE ahtml>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crazy Deal Finder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate-900 for a dark, modern background */
+            color: #e2e8f0; /* Slate-200 for text */
+        }
+        .product-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+            background-color: #1e293b; /* Slate-800 for card background */
+            color: #e2e8f0;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .gradient-bg {
+            background-image: linear-gradient(to right, #4c51bf, #6b46c1);
+        }
+        .loading-animation {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 min-h-screen flex flex-col items-center p-4 md:p-8">
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        setLogLevel('debug'); // Enable Firestore debug logging
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth, userId = null;
+        let isAuthReady = false;
+
+        const mockDeals = [
+            {
+                id: 'deal_1',
+                title: 'Crazy Price Drop!',
+                message: 'A limited-time offer on the new Galaxy phone. Don\'t miss out!',
+                productName: 'Samsung Galaxy A17 5G',
+                dealPercentage: 42,
+                timestamp: Date.now() - 3600000 // 1 hour ago
+            },
+            {
+                id: 'deal_2',
+                title: 'Flash Sale Alert!',
+                message: 'Motorola G45 5G is now at a new low price with an extra bank discount.',
+                productName: 'Motorola G45 5G',
+                dealPercentage: 20,
+                timestamp: Date.now() - 1200000 // 20 mins ago
+            },
+        ];
+
+        // Products with mock data
+        const products = [
+            { id: 'p1', name: 'Samsung Galaxy A17 5G', originalPrice: 13999, dealPrice: 8119, specs: { processor: 'Exynos', camera: 'High', battery: 'High' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=Samsung', buyLink: 'https://www.flipkart.com/samsung' },
+            { id: 'p2', name: 'Realme P4 5G', originalPrice: 14799, dealPrice: 11874, specs: { processor: 'Dimensity', camera: 'Medium', battery: 'Medium' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=Realme', buyLink: 'https://www.flipkart.com/realme' },
+            { id: 'p3', name: 'POCO M7 Plus', originalPrice: 13774, dealPrice: 13774, specs: { processor: 'Snapdragon', camera: 'Medium', battery: 'High' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=POCO', buyLink: 'https://www.flipkart.com/poco' },
+            { id: 'p4', name: 'CMF Phone 2 Pro', originalPrice: 17099, dealPrice: 17099, specs: { processor: 'Dimensity', camera: 'High', battery: 'Medium' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=CMF', buyLink: 'https://www.flipkart.com/cmf' },
+            { id: 'p5', name: 'Vivo T4x', originalPrice: 13774, dealPrice: 13774, specs: { processor: 'Dimensity', camera: 'High', battery: 'High' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=Vivo', buyLink: 'https://www.flipkart.com/vivo' },
+            { id: 'p6', name: 'Motorola G45 5G', originalPrice: 12499, dealPrice: 9999, specs: { processor: 'Snapdragon', camera: 'Medium', battery: 'Medium' }, imageUrl: 'https://placehold.co/400x400/1e293b/e2e8f0?text=Motorola', buyLink: 'https://www.flipkart.com/motorola' },
+        ];
+        
+        // This is a simplified function to simulate adding a new deal to Firestore.
+        // It's not part of the main app logic but demonstrates how a backend might update the public collection.
+        const simulateNewDeal = async () => {
+            const newDeal = {
+                title: 'New Deal Alert!',
+                message: 'A brand new flash deal just went live!',
+                productName: 'Simulated New Phone',
+                dealPercentage: Math.floor(Math.random() * 50) + 10,
+                timestamp: Date.now()
+            };
+            const dealsCollectionRef = collection(db, `artifacts/${appId}/public/data/deals`);
+            try {
+                await addDoc(dealsCollectionRef, newDeal);
+                console.log('Simulated new deal added to Firestore');
+            } catch (error) {
+                console.error('Error adding simulated deal:', error);
+            }
+        };
+
+        const initFirebase = async () => {
+            if (Object.keys(firebaseConfig).length > 0) {
+                try {
+                    app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } catch (error) {
+                    console.error("Error initializing Firebase:", error);
+                    alert("Firebase initialization failed. Check your configuration.");
+                }
+            } else {
+                app = initializeApp({});
+                db = getFirestore(app);
+                auth = getAuth(app);
+                await signInAnonymously(auth);
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    userId = user.uid;
+                } else {
+                    userId = null;
+                }
+                isAuthReady = true;
+                const userIdDisplay = document.getElementById('user-id-display');
+                if (userIdDisplay) {
+                    userIdDisplay.textContent = `User ID: ${userId || 'Guest'}`;
+                }
+                
+                // Once auth is ready, set up listeners and load preferences
+                if (isAuthReady) {
+                    setupListeners();
+                    loadUserPreferences();
+                }
+            });
+        };
+
+        const setupListeners = () => {
+            // Listen for changes in the public deals collection
+            const dealsQuery = collection(db, `artifacts/${appId}/public/data/deals`);
+            onSnapshot(dealsQuery, (snapshot) => {
+                const recentDeals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                displayNotifications(recentDeals);
+            }, (error) => {
+                console.error("Error listening to public deals:", error);
+            });
+        };
+
+        const displayNotifications = (deals) => {
+            const notificationsContainer = document.getElementById('notification-container');
+            notificationsContainer.innerHTML = '';
+            deals.sort((a, b) => b.timestamp - a.timestamp); // Sort by most recent
+            deals.slice(0, 3).forEach(deal => {
+                const notification = document.createElement('div');
+                notification.className = 'bg-yellow-800 border-l-4 border-yellow-500 text-yellow-200 p-4 rounded-md shadow-sm mb-2 transition-all duration-300 transform hover:scale-105';
+                notification.innerHTML = `
+                    <h4 class="font-bold">${deal.title}</h4>
+                    <p class="text-sm">${deal.message}</p>
+                    <p class="text-xs mt-1">Product: ${deal.productName} | Drop: ${deal.dealPercentage}%</p>
+                `;
+                notificationsContainer.appendChild(notification);
+            });
+        };
+
+        const saveUserPreferences = async (minPrice, maxPrice, spec) => {
+            if (!isAuthReady || !userId) {
+                console.warn("User not authenticated or auth not ready.");
+                return;
+            }
+            const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/preferences/user_prefs`);
+            const preferences = {
+                minPrice: parseFloat(minPrice) || 0,
+                maxPrice: parseFloat(maxPrice) || Infinity,
+                spec: spec || 'all',
+                updatedAt: new Date().toISOString()
+            };
+            try {
+                await setDoc(userDocRef, preferences, { merge: true });
+                console.log("Preferences saved successfully!");
+                document.getElementById('save-status').textContent = 'Preferences saved!';
+            } catch (error) {
+                console.error("Error saving preferences:", error);
+                document.getElementById('save-status').textContent = 'Failed to save preferences.';
+            }
+        };
+
+        const loadUserPreferences = async () => {
+            if (!isAuthReady || !userId) {
+                console.warn("User not authenticated or auth not ready.");
+                return;
+            }
+            const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/preferences/user_prefs`);
+            try {
+                const docSnap = await getDoc(userDocRef);
+                if (docSnap.exists()) {
+                    const preferences = docSnap.data();
+                    document.getElementById('min-price').value = preferences.minPrice || '';
+                    document.getElementById('max-price').value = preferences.maxPrice || '';
+                    document.getElementById('spec-filter').value = preferences.spec || 'all';
+                    console.log("Preferences loaded successfully!");
+                } else {
+                    console.log("No saved preferences found.");
+                }
+            } catch (error) {
+                console.error("Error loading preferences:", error);
+            }
+        };
+
+        // Modal functions
+        const showModal = (title, content) => {
+            const modal = document.getElementById('modal');
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-content').innerHTML = content;
+            modal.classList.remove('hidden');
+        };
+
+        const closeModal = () => {
+            document.getElementById('modal').classList.add('hidden');
+        };
+
+        // Gemini API calls
+        const callGeminiApi = async (prompt) => {
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: {
+                    parts: [{ text: "You are a witty, concise, and helpful shopping assistant who loves a good deal." }]
+                }
+            };
+
+            let retryCount = 0;
+            const maxRetries = 3;
+            let result;
+
+            while (retryCount < maxRetries) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        if (response.status === 429) {
+                            console.warn(`Rate limit exceeded. Retrying in ${Math.pow(2, retryCount)} seconds...`);
+                            await new Promise(res => setTimeout(res, Math.pow(2, retryCount) * 1000));
+                            retryCount++;
+                            continue;
+                        } else {
+                            throw new Error(`API call failed with status ${response.status}: ${JSON.stringify(error)}`);
+                        }
+                    }
+
+                    result = await response.json();
+                    break;
+
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    return "Sorry, I couldn't generate that content right now.";
+                }
+            }
+            
+            const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+            return text || "No response from API. Please try again.";
+        };
+
+        const getDealSummary = async (product) => {
+            showModal('Getting Deal Summary...', '<div class="loading-animation mx-auto"></div>');
+            const prompt = `Write a one-sentence, witty, and concise summary for a crazy deal on the following product: ${product.name}, originally priced at ₹${product.originalPrice}, now at ₹${product.dealPrice}. Focus on why it's a great value.`;
+            const summary = await callGeminiApi(prompt);
+            showModal('Deal Summary', `<p>${summary}</p>`);
+        };
+
+        const explainSpecs = async (product) => {
+            showModal('Explaining Specs...', '<div class="loading-animation mx-auto"></div>');
+            const prompt = `Explain the following specifications for the product "${product.name}" in simple, non-technical terms for a general consumer: Processor: ${product.specs.processor}, Camera Quality: ${product.specs.camera}, Battery Life: ${product.specs.battery}. Focus on what these features mean for a person's daily phone usage.`;
+            const explanation = await callGeminiApi(prompt);
+            showModal('Spec Explained', `<p>${explanation}</p>`);
+        };
+
+        const renderProducts = () => {
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = '';
+
+            const minPrice = parseFloat(document.getElementById('min-price').value) || 0;
+            const maxPrice = parseFloat(document.getElementById('max-price').value) || Infinity;
+            const spec = document.getElementById('spec-filter').value;
+
+            const filteredProducts = products.filter(product => {
+                const priceMatch = product.dealPrice >= minPrice && product.dealPrice <= maxPrice;
+                const specMatch = spec === 'all' || (product.specs && product.specs[spec] === 'High');
+                return priceMatch && specMatch;
+            });
+
+            if (filteredProducts.length === 0) {
+                productList.innerHTML = `<p class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 font-semibold">No products found matching your criteria.</p>`;
+            } else {
+                filteredProducts.forEach(product => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-800 rounded-xl shadow-lg p-6 flex flex-col items-center text-center product-card';
+                    const savedPercentage = ((product.originalPrice - product.dealPrice) / product.originalPrice * 100).toFixed(0);
+                    card.innerHTML = `
+                        <img src="${product.imageUrl}" alt="${product.name}" class="w-40 h-40 object-cover rounded-lg mb-4">
+                        <h3 class="text-xl font-bold text-slate-100">${product.name}</h3>
+                        <div class="mt-2 text-slate-400">
+                            <p class="text-sm">
+                                <span class="line-through">₹${product.originalPrice}</span>
+                                <span class="font-bold text-red-400 ml-2">₹${product.dealPrice}</span>
+                            </p>
+                            <p class="text-green-400 font-bold mt-1">${savedPercentage}% off!</p>
+                        </div>
+                        <div class="mt-4 flex-grow flex flex-col items-center space-y-2 w-full">
+                            <a href="${product.buyLink}" target="_blank" class="w-full gradient-bg text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                Buy Now
+                            </a>
+                            <button onclick="getDealSummary(${JSON.stringify(product).replace(/"/g, "'")})" class="w-full bg-slate-700 text-purple-300 font-bold py-3 px-6 rounded-full shadow-lg hover:bg-slate-600 transition-all duration-300">
+                                ✨ Get Deal Summary
+                            </button>
+                            <button onclick="explainSpecs(${JSON.stringify(product).replace(/"/g, "'")})" class="w-full bg-slate-700 text-purple-300 font-bold py-3 px-6 rounded-full shadow-lg hover:bg-slate-600 transition-all duration-300">
+                                ✨ Explain Specs
+                            </button>
+                        </div>
+                    `;
+                    productList.appendChild(card);
+                });
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initFirebase();
+            renderProducts();
+
+            document.getElementById('apply-filters').addEventListener('click', () => {
+                renderProducts();
+            });
+
+            document.getElementById('save-preferences').addEventListener('click', () => {
+                const minPrice = document.getElementById('min-price').value;
+                const maxPrice = document.getElementById('max-price').value;
+                const spec = document.getElementById('spec-filter').value;
+                saveUserPreferences(minPrice, maxPrice, spec);
+            });
+
+            document.getElementById('reset-filters').addEventListener('click', () => {
+                document.getElementById('min-price').value = '';
+                document.getElementById('max-price').value = '';
+                document.getElementById('spec-filter').value = 'all';
+                document.getElementById('save-status').textContent = '';
+                renderProducts();
+            });
+            
+            document.getElementById('add-deal-btn').addEventListener('click', simulateNewDeal);
+            document.getElementById('close-modal').addEventListener('click', closeModal);
+        });
+    </script>
+
+    <!-- UI Elements -->
+    <main class="w-full max-w-6xl space-y-8">
+        <header class="text-center py-8">
+            <h1 class="text-5xl font-extrabold text-white tracking-tight">Crazy Deal Finder</h1>
+            <p class="mt-2 text-lg text-slate-400">Find unimaginable prices on smartphones and more.</p>
+        </header>
+
+        <section class="bg-slate-800 rounded-2xl shadow-xl p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-white mb-4">Live Price Drops & Notifications</h2>
+            <div id="notification-container" class="space-y-4">
+                <!-- Notifications will be displayed here -->
+            </div>
+            <div class="mt-4 text-center">
+                <button id="add-deal-btn" class="text-sm text-blue-400 hover:text-blue-200 transition-colors duration-300">Simulate a new deal drop</button>
+            </div>
+        </section>
+
+        <section class="bg-slate-800 rounded-2xl shadow-xl p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-white mb-4">Customize Your Search</h2>
+            <div id="user-id-display" class="text-slate-400 text-sm mb-4">Authenticating...</div>
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <div class="w-full">
+                    <label for="min-price" class="block text-sm font-medium text-slate-400">Min Price (₹)</label>
+                    <input type="number" id="min-price" class="mt-1 block w-full rounded-md border-slate-700 bg-slate-900 text-white shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="w-full">
+                    <label for="max-price" class="block text-sm font-medium text-slate-400">Max Price (₹)</label>
+                    <input type="number" id="max-price" class="mt-1 block w-full rounded-md border-slate-700 bg-slate-900 text-white shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="w-full">
+                    <label for="spec-filter" class="block text-sm font-medium text-slate-400">Specification</label>
+                    <select id="spec-filter" class="mt-1 block w-full rounded-md border-slate-700 bg-slate-900 text-white shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="all">All Specs</option>
+                        <option value="processor">High Performance Processor</option>
+                        <option value="camera">High Camera Quality</option>
+                        <option value="battery">High Battery Life</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-6 flex flex-wrap gap-4 justify-center">
+                <button id="apply-filters" class="gradient-bg text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    Apply Filters
+                </button>
+                <button id="reset-filters" class="bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-full shadow-lg hover:bg-slate-600 transition-all duration-300">
+                    Reset
+                </button>
+                <button id="save-preferences" class="bg-green-600 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:bg-green-700 transition-all duration-300">
+                    Save Preferences
+                </button>
+            </div>
+            <p id="save-status" class="text-center text-sm mt-4 text-slate-500"></p>
+        </section>
+
+        <section class="bg-slate-800 rounded-2xl shadow-xl p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-white mb-6">Explore Crazy Deals</h2>
+            <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Product cards will be rendered here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for Gemini API output -->
+    <div id="modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center transition-opacity duration-300">
+        <div class="relative bg-slate-800 p-8 rounded-lg shadow-2xl max-w-sm mx-auto transform transition-transform duration-300">
+            <h3 id="modal-title" class="text-xl font-bold text-white mb-4"></h3>
+            <div id="modal-content" class="text-slate-300"></div>
+            <div class="mt-6 text-center">
+                <button id="close-modal" class="gradient-bg text-white font-bold py-2 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">Close</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
